@@ -10,11 +10,18 @@ import UIKit
 
 class MainViewController: UIViewController {
     
+    @IBOutlet private weak var collectionView: UICollectionView!
+    
+    @IBOutlet private weak var addButton : UIBarButtonItem!
+    let originalData  = ["Janeiro", "Fevereiro", "Marco", "Abril", "maio", "Junho",
+                          "Julho", "Agosto", "Setembro","Outubro", "Novembro", "Dezembro"]
+    
     var collectionData = ["Janeiro", "Fevereiro", "Marco", "Abril", "maio", "Junho",
                           "Julho", "Agosto", "Setembro","Outubro", "Novembro", "Dezembro"]
     
     @objc func refresh(){
-        addItem()
+        collectionData = originalData
+        collectionView.reloadData()
         collectionView.refreshControl?.endRefreshing()
     }
     
@@ -23,9 +30,14 @@ class MainViewController: UIViewController {
         collectionView.insertItems(at: [IndexPath(row: collectionData.count-1, section: 0)])
     }
     
-    @IBOutlet private weak var collectionView: UICollectionView!
-    
-    @IBOutlet private weak var addButton : UIBarButtonItem!
+    @IBAction func deleteSelectedItems(){
+        if let selectedIndexes = collectionView.indexPathsForSelectedItems{
+            for index in selectedIndexes{
+                collectionData.remove(at: index.row)
+            }
+            collectionView.deleteItems(at: selectedIndexes)
+        }
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -41,6 +53,7 @@ class MainViewController: UIViewController {
         layout.itemSize = CGSize(width: width, height: width)
         
         navigationItem.leftBarButtonItem = editButtonItem
+        
     }
     
     override func didReceiveMemoryWarning() {
@@ -66,10 +79,17 @@ class MainViewController: UIViewController {
         for index in collectionView.indexPathsForVisibleItems{
             let cell = collectionView.cellForItem(at: index) as? CollectionViewCell
             cell?.isEditting = editing
-            //TODO: test if it works            cell?.isEditting = isEditing
+        }
+        
+        if navigationItem.rightBarButtonItems != nil{
+            if editing{
+                let deleteButton = UIBarButtonItem(title: "Delete", style: UIBarButtonItemStyle.plain, target: self, action: #selector(self.deleteSelectedItems))
+                navigationItem.rightBarButtonItems!.append(deleteButton)
+            }else{
+                navigationItem.rightBarButtonItems!.removeLast()
+            }
         }
     }
-    
 }
 
 extension MainViewController: UICollectionViewDataSource{
