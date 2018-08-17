@@ -10,9 +10,11 @@ import UIKit
 
 class MainViewController: UIViewController {
     
+
     @IBOutlet private weak var collectionView: UICollectionView!
     
     @IBOutlet private weak var addButton : UIBarButtonItem!
+    
     let originalData  = ["Janeiro", "Fevereiro", "Marco", "Abril", "maio", "Junho",
                           "Julho", "Agosto", "Setembro","Outubro", "Novembro", "Dezembro"]
     
@@ -32,8 +34,9 @@ class MainViewController: UIViewController {
     
     @IBAction func deleteSelectedItems(){
         if let selectedIndexes = collectionView.indexPathsForSelectedItems{
-            for index in selectedIndexes{
-                collectionData.remove(at: index.row)
+            let reversedOrderedIndexes = selectedIndexes.map{$0.item}.sorted().reversed()
+            for position in reversedOrderedIndexes{
+                collectionData.remove(at: position)
             }
             collectionView.deleteItems(at: selectedIndexes)
         }
@@ -83,10 +86,9 @@ class MainViewController: UIViewController {
         
         if navigationItem.rightBarButtonItems != nil{
             if editing{
-                let deleteButton = UIBarButtonItem(title: "Delete", style: UIBarButtonItemStyle.plain, target: self, action: #selector(self.deleteSelectedItems))
-                navigationItem.rightBarButtonItems!.append(deleteButton)
+                navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.trash, target: self, action: #selector(self.deleteSelectedItems))
             }else{
-                navigationItem.rightBarButtonItems!.removeLast()
+                navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.add, target: self, action: #selector(self.addItem))
             }
         }
     }
