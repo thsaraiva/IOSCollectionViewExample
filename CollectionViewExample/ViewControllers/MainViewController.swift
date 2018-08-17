@@ -8,19 +8,39 @@
 
 import UIKit
 
-var collectionData = ["Janeiro", "Fevereiro", "Marco", "Abril", "maio", "Junho",
-                      "Julho", "Agosto", "Setembro","Outubro", "Novembro", "Dezembro"]
-
 class MainViewController: UIViewController {
+    
+    var collectionData = ["Janeiro", "Fevereiro", "Marco", "Abril", "maio", "Junho",
+                          "Julho", "Agosto", "Setembro","Outubro", "Novembro", "Dezembro"]
+    
+    @objc func refresh(){
+        addItem()
+        collectionView.refreshControl?.endRefreshing()
+    }
+    
+    @IBAction func addItem(){
+        collectionData.append("New Word")
+        collectionView.insertItems(at: [IndexPath(row: collectionData.count-1, section: 0)])
+    }
     
     @IBOutlet private weak var collectionView: UICollectionView!
     
+    @IBOutlet private weak var addButton : UIBarButtonItem!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        //Configure PULL-TO-REFRESH in CollectionView
+        let refreshControl = UIRefreshControl()
+        refreshControl.addTarget(self, action: #selector(self.refresh), for: UIControlEvents.valueChanged)
+        collectionView.refreshControl  = refreshControl
+        
         self.title = "Meses"
         let width = (view.frame.size.width-20)/3
         let layout = collectionView.collectionViewLayout as! UICollectionViewFlowLayout
         layout.itemSize = CGSize(width: width, height: width)
+        
+        navigationItem.leftBarButtonItem = editButtonItem
     }
     
     override func didReceiveMemoryWarning() {
@@ -29,13 +49,27 @@ class MainViewController: UIViewController {
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == "DetailSegue"{
+        if segue.identifier == "DetailsSegue"{
             if let dest = segue.destination as? DetailViewController,
-                let firstSelectedIndex = collectionView.indexPathsForSelectedItems?.first{
-                dest.selection = collectionData[firstSelectedIndex.row]
+                let index = sender as? IndexPath{
+                dest.selection = collectionData[index.item]
             }
         }
     }
+    
+    override func setEditing(_ editing: Bool, animated: Bool) {
+        super.setEditing(editing, animated: animated)
+        addButton.isEnabled = !editing
+        
+        collectionView.allowsMultipleSelection = editing
+        
+        for index in collectionView.indexPathsForVisibleItems{
+            let cell = collectionView.cellForItem(at: index) as? CollectionViewCell
+            cell?.isEditting = editing
+            //TODO: test if it works            cell?.isEditting = isEditing
+        }
+    }
+    
 }
 
 extension MainViewController: UICollectionViewDataSource{
@@ -44,17 +78,18 @@ extension MainViewController: UICollectionViewDataSource{
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CollectionViewCell", for: indexPath)
-        if let label = cell.viewWithTag(100) as? UILabel{
-            label.text = collectionData[indexPath.row]
-        }
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CollectionViewCell", for: indexPath) as! CollectionViewCell
+        cell.cellTitle.text = collectionData[indexPath.row]
+        cell.isEditting = isEditing
         return cell
     }
 }
 
 extension MainViewController : UICollectionViewDelegate{
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        print("Selected item: \(collectionData[indexPath.row])")
+        if !isEditing{
+            performSegue(withIdentifier: "DetailsSegue", sender: indexPath)
+        }
     }
 }
 
